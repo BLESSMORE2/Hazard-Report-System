@@ -1,0 +1,15 @@
+# HIRS – Professional prototype theme
+[theme]
+primaryColor = "#0d47a1"
+backgroundColor = "#f5f7fa"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#1a237e"
+font = "sans serif"
+
+[server]
+headless = true
+enableCORS = false
+enableXsrfProtection = true
+
+[browser]
+gatherUsageStats = false
