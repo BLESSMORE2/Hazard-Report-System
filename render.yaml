@@ -1,0 +1,12 @@
+# Render.com – deploy as a Web Service
+# Docs: https://render.com/docs/deploy-dash
+services:
+  - type: web
+    name: hirs-hazard-report
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn dash_app:server --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
