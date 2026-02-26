@@ -49,8 +49,23 @@ def _init_session():
         st.session_state.admin_stations = "Station A\nStation B\nMain Ramp"
     if "admin_departments" not in st.session_state:
         st.session_state.admin_departments = "Ramp\nCargo\nGSE\nSafety"
+    if "current_page" not in st.session_state:
+        st.session_state.current_page = "Report"
 
 _init_session()
+
+# All pages (single source of truth for nav)
+PAGES = [
+    "Report",
+    "Hazards",
+    "Risk & Triage",
+    "CAPA",
+    "Investigation",
+    "Dashboard",
+    "Exports",
+    "Admin",
+    "Reference",
+]
 
 # ---------------------------------------------------------------------------
 # Custom CSS (professional polish – cards, metrics, empty states, print)
@@ -93,6 +108,18 @@ def _inject_css():
     .hirs-matrix .cell-active { box-shadow: inset 0 0 0 3px #0d47a1; font-weight: 700; }
     /* Print: hide sidebar and footer, expand content */
     @media print { .css-1d391kg { display: none !important; } [data-testid="stSidebar"] { display: none !important; } .hirs-footer { display: none !important; } .block-container { max-width: 100% !important; } }
+    /* Website-style header */
+    .hirs-header-wrap { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: #fff; padding: 0.75rem 1.5rem; margin: -1rem -1rem 1.5rem -1rem; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(13,71,161,0.3); }
+    .hirs-header-wrap a { color: #fff; text-decoration: none; padding: 0.35rem 0.6rem; border-radius: 6px; font-weight: 500; font-size: 0.9rem; }
+    .hirs-header-wrap a:hover { background: rgba(255,255,255,0.2); }
+    .hirs-header-wrap .hirs-nav-link { display: inline-block; margin: 0 0.15rem; }
+    .hirs-header-logo { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; }
+    .hirs-header-tagline { font-size: 0.8rem; opacity: 0.9; }
+    /* Sidebar: navigation section prominence */
+    [data-testid="stSidebar"] .stRadio > label { font-weight: 700; font-size: 0.95rem; color: #1a237e !important; }
+    [data-testid="stSidebar"] .stRadio [role="radiogroup"] { flex-direction: column; }
+    [data-testid="stSidebar"] .stRadio label { padding: 0.5rem 0.6rem; border-radius: 8px; margin-bottom: 2px; }
+    [data-testid="stSidebar"] .stRadio label:hover { background: #e8eaf6; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -1015,19 +1042,54 @@ def render_reference():
 def main():
     _inject_css()
 
-    st.sidebar.title("⚠️ HIRS")
-    st.sidebar.caption("Hazard Identification & Reporting System")
-    st.sidebar.markdown("*Airport ground handling & ramp operations*")
-    st.sidebar.markdown("---")
-
-    # Quick stats
     hazards = st.session_state.hazards
     open_statuses = ["Submitted", "Triage", "Assigned actions", "In progress", "Awaiting verification"]
     open_count = sum(1 for h in hazards if h.get("status") in open_statuses)
+
+    # ----- Website-style header (main content area) -----
+    st.markdown(
+        '<div class="hirs-header-wrap" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">'
+        '<div><span class="hirs-header-logo">⚠️ HIRS</span><br>'
+        '<span class="hirs-header-tagline">Hazard Identification & Reporting System · Airport ground handling & ramp operations</span></div>'
+        f'<div style="text-align:right;"><span class="hirs-header-tagline">Total reports: <strong>{len(hazards)}</strong> · Open: <strong>{open_count}</strong></span><br>'
+        f'<span class="hirs-header-tagline">Role: {st.session_state.current_role}</span></div>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+    # Nav bar (website-style links – same as sidebar)
+    st.markdown("**Navigate:**")
+    nav_cols = st.columns(len(PAGES))
+    for i, p in enumerate(PAGES):
+        with nav_cols[i]:
+            if st.button(p, key=f"hdr_nav_{p}", type="primary" if p == st.session_state.current_page else "secondary"):
+                st.session_state.current_page = p
+                st.rerun()
+    st.markdown("---")
+
+    # ----- Sidebar: branding + navigation (all pages) + stats + role -----
+    st.sidebar.markdown("### ⚠️ HIRS")
+    st.sidebar.caption("Hazard Identification & Reporting System")
+    st.sidebar.caption("*Airport ground handling & ramp operations*")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("### 🧭 Navigation")
+    st.sidebar.markdown("**Go to page:**")
+    try:
+        nav_idx = PAGES.index(st.session_state.current_page)
+    except ValueError:
+        nav_idx = 0
+    page = st.sidebar.radio(
+        "Select page",
+        PAGES,
+        index=nav_idx,
+        key="sidebar_nav",
+        label_visibility="collapsed",
+    )
+    st.session_state.current_page = page
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("**Summary**")
     st.sidebar.metric("Total reports", len(hazards))
     st.sidebar.metric("Open", open_count)
     st.sidebar.markdown("---")
-
     st.sidebar.markdown("**View as role**")
     st.session_state.current_role = st.sidebar.selectbox("Role", ROLES, key="role_sel", label_visibility="collapsed")
     with st.sidebar.expander("Role permissions"):
@@ -1037,24 +1099,7 @@ def main():
         st.sidebar.success("Sample data loaded.")
         st.rerun()
     st.sidebar.markdown("---")
-
-    page = st.sidebar.radio(
-        "Navigate",
-        [
-            "Report",
-            "Hazards",
-            "Risk & Triage",
-            "CAPA",
-            "Investigation",
-            "Dashboard",
-            "Exports",
-            "Admin",
-            "Reference",
-        ],
-        label_visibility="collapsed",
-    )
-    st.sidebar.markdown("---")
-    st.sidebar.caption("HIRS Prototype v1.0 · Front-end only · No backend")
+    st.sidebar.caption("HIRS Prototype v1.0 · No backend")
     st.sidebar.caption("Prepared for YESAYA YESAYA · 25 Feb 2026")
 
     if page == "Report":
