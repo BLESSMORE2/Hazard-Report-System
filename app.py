@@ -66,6 +66,8 @@ PAGES = [
     "Admin",
     "Reference",
 ]
+PAGE_ICONS = ["📋", "📂", "⚖️", "📌", "🔍", "📊", "📤", "⚙️", "📎"]
+PAGES_DISPLAY = [f"{icon} {name}" for icon, name in zip(PAGE_ICONS, PAGES)]
 
 # ---------------------------------------------------------------------------
 # Custom CSS (professional polish – cards, metrics, empty states, print)
@@ -73,8 +75,10 @@ PAGES = [
 def _inject_css():
     st.markdown("""
     <style>
-    /* Main content spacing */
-    .block-container { padding-top: 1.5rem; padding-bottom: 2rem; max-width: 1200px; }
+    /* App background – light main area under purple header */
+    [data-testid="stAppViewContainer"] > .main { background: #f5f7fa; padding-top: 0; }
+    /* Main content spacing – push below fixed header so sidebar + top bar connect */
+    .main .block-container { padding-top: 4rem; padding-bottom: 2rem; max-width: 1400px; background: #ffffff; border-radius: 12px 12px 0 0; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
     /* Card-style panels and expanders */
     .stExpander { border-radius: 10px; border: 1px solid #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 0.5rem; }
     [data-testid="stExpander"] summary { padding: 0.6rem 0.8rem; font-weight: 600; border-radius: 10px; }
@@ -105,21 +109,49 @@ def _inject_css():
     .hirs-matrix .cell-medium { background: #fff8e1; }
     .hirs-matrix .cell-high { background: #ffebee; }
     .hirs-matrix .cell-extreme { background: #b71c1c; color: #fff; }
-    .hirs-matrix .cell-active { box-shadow: inset 0 0 0 3px #0d47a1; font-weight: 700; }
-    /* Print: hide sidebar and footer, expand content */
+    .hirs-matrix .cell-active { box-shadow: inset 0 0 0 3px #5e4a7a; font-weight: 700; }
+    /* Print: hide sidebar and footer */
     @media print { .css-1d391kg { display: none !important; } [data-testid="stSidebar"] { display: none !important; } .hirs-footer { display: none !important; } .block-container { max-width: 100% !important; } }
-    /* Website-style header */
-    .hirs-header-wrap { background: linear-gradient(135deg, #0d47a1 0%, #1565c0 100%); color: #fff; padding: 0.75rem 1.5rem; margin: -1rem -1rem 1.5rem -1rem; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(13,71,161,0.3); }
-    .hirs-header-wrap a { color: #fff; text-decoration: none; padding: 0.35rem 0.6rem; border-radius: 6px; font-weight: 500; font-size: 0.9rem; }
-    .hirs-header-wrap a:hover { background: rgba(255,255,255,0.2); }
-    .hirs-header-wrap .hirs-nav-link { display: inline-block; margin: 0 0.15rem; }
-    .hirs-header-logo { font-size: 1.35rem; font-weight: 800; letter-spacing: 0.02em; }
-    .hirs-header-tagline { font-size: 0.8rem; opacity: 0.9; }
-    /* Sidebar: navigation section prominence */
-    [data-testid="stSidebar"] .stRadio > label { font-weight: 700; font-size: 0.95rem; color: #1a237e !important; }
-    [data-testid="stSidebar"] .stRadio [role="radiogroup"] { flex-direction: column; }
-    [data-testid="stSidebar"] .stRadio label { padding: 0.5rem 0.6rem; border-radius: 8px; margin-bottom: 2px; }
-    [data-testid="stSidebar"] .stRadio label:hover { background: #e8eaf6; }
+    /* ========== DC/OS-style: top header bar – fixed, full width, connects to sidebar ========== */
+    .hirs-top-header {
+        position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important;
+        height: 52px !important; box-sizing: border-box !important; margin: 0 !important; z-index: 1000 !important;
+        background: linear-gradient(90deg, #3f2b5f 0%, #5e4a7a 50%, #4a3d6a 100%); color: #fff;
+        padding: 0 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25); font-family: inherit;
+    }
+    .hirs-top-header-left { display: flex; align-items: center; gap: 0.75rem; }
+    .hirs-top-header-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+    .hirs-top-header-tagline { font-size: 0.75rem; opacity: 0.9; margin-left: 0.25rem; }
+    .hirs-top-header-right { display: flex; align-items: center; gap: 1rem; }
+    .hirs-top-header-divider { width: 1px; height: 1.25rem; background: rgba(255,255,255,0.4); }
+    /* Page title row in main content */
+    .hirs-page-title-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+    .hirs-page-title { font-size: 1.6rem; font-weight: 700; color: #3f2b5f; margin: 0; }
+    /* Sidebar: same purple as header for top 52px so they connect, then dark gray (L-shaped frame) */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #3f2b5f 0%, #5e4a7a 52px, #2d2d2d 52px, #1f1f1f 100%) !important;
+        padding-top: 52px !important;
+        min-height: 100vh;
+    }
+    [data-testid="stSidebar"] > div { padding-top: 0 !important; }
+    [data-testid="stSidebar"] .stMarkdown { color: #e0e0e0 !important; }
+    [data-testid="stSidebar"] .stMarkdown p { color: #e0e0e0 !important; }
+    [data-testid="stSidebar"] label { color: #e0e0e0 !important; }
+    [data-testid="stSidebar"] .stCaptionContainer { color: #b0b0b0 !important; }
+    [data-testid="stSidebar"] .stRadio > div { flex-direction: column; gap: 0; }
+    [data-testid="stSidebar"] .stRadio label { background: transparent !important; padding: 0.5rem 0.75rem !important; border-radius: 4px !important; margin-bottom: 2px !important; color: #e0e0e0 !important; font-weight: 500 !important; }
+    [data-testid="stSidebar"] .stRadio label:hover { background: rgba(255,255,255,0.08) !important; }
+    [data-testid="stSidebar"] .stRadio label[data-checked="true"], [data-testid="stSidebar"] .stRadio div[role="radiogroup"] > label:has(input:checked) { background: #5e4a7a !important; color: #fff !important; font-weight: 700 !important; }
+    [data-testid="stSidebar"] [data-testid="stMetric"] { background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1); color: #e0e0e0 !important; }
+    [data-testid="stSidebar"] [data-testid="stMetric"] label { color: #b0b0b0 !important; }
+    [data-testid="stSidebar"] [data-testid="stMetric"] [data-testid="stMetricValue"] { color: #fff !important; }
+    [data-testid="stSidebar"] select { background: #3d3d3d !important; color: #fff !important; border-color: #555 !important; }
+    [data-testid="stSidebar"] .stButton button { background: #5e4a7a !important; color: #fff !important; border: none !important; }
+    [data-testid="stSidebar"] .stButton button:hover { background: #6d5a8a !important; }
+    [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.15) !important; }
+    /* Primary buttons in main: purple accent */
+    .stButton button[kind="primary"] { background: linear-gradient(90deg, #5e4a7a, #4a3d6a) !important; color: #fff !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -211,7 +243,7 @@ def _load_sample_data():
 # Module A – Hazard reporting (Draft, subcategory, attachments)
 # ---------------------------------------------------------------------------
 def render_report():
-    st.header("📋 New hazard report")
+    st.subheader("New hazard report")
     st.caption("Submit in under 2 minutes. Mobile-first. Draft, named/confidential/anonymous, attachments.")
     st.success("⏱️ **Designed for speed:** Complete the required fields (*) and submit in under 2 minutes. Save as Draft to finish later.")
     st.markdown("---")
@@ -364,7 +396,7 @@ def render_report():
 # Hazards list + detail + status + rejection reason
 # ---------------------------------------------------------------------------
 def render_hazards():
-    st.header("📂 Hazards list")
+    st.subheader("Hazards list")
     st.caption("Filter by station, risk, status. Update workflow status; reject with reason. Optionally add feedback to reporter.")
     hazards = st.session_state.hazards
     if not hazards:
@@ -490,7 +522,7 @@ def render_hazards():
 # Module B – Risk assessment and triage (5×5 matrix, escalation, triage rules)
 # ---------------------------------------------------------------------------
 def render_risk_triage():
-    st.header("⚖️ Risk assessment and triage")
+    st.subheader("Risk assessment and triage")
     st.caption("5×5 Likelihood × Severity matrix. Auto-calculated risk level and escalation rules.")
     hazards = [h for h in st.session_state.hazards if h.get("status") not in ("Draft", "Rejected")]
     if not hazards:
@@ -576,7 +608,7 @@ def render_risk_triage():
 # Module C – CAPA (multiple actions, due dates, evidence, verification, overdue)
 # ---------------------------------------------------------------------------
 def render_capa():
-    st.header("📌 Corrective and preventive actions (CAPA)")
+    st.subheader("Corrective and preventive actions (CAPA)")
     st.caption("Multiple actions per report. Owner, due date, evidence, verification. Overdue escalation.")
 
     hazards = st.session_state.hazards
@@ -681,7 +713,7 @@ def render_capa():
 # Module D – Investigation (serious events, REDA-style, lessons learned)
 # ---------------------------------------------------------------------------
 def render_investigation():
-    st.header("🔍 Investigation (serious events)")
+    st.subheader("Investigation (serious events)")
     st.caption("Structured investigation with contributing factors, corrective recommendations, lessons learned. Optional REDA-style.")
 
     hazards = st.session_state.hazards
@@ -733,7 +765,7 @@ def render_investigation():
 # Module E – Dashboards (open by station/area/department/risk, overdue, KPIs, trends, heat map)
 # ---------------------------------------------------------------------------
 def render_dashboard():
-    st.header("📊 Dashboards")
+    st.subheader("Dashboards")
     st.caption("Open hazards by station/risk; overdue actions; time-to-triage and time-to-close; trends; risk heat map.")
     hazards = st.session_state.hazards
     if not hazards:
@@ -851,7 +883,7 @@ def render_dashboard():
 # Exports (CSV/Excel, printable investigation, audit log)
 # ---------------------------------------------------------------------------
 def render_exports():
-    st.header("📤 Exports")
+    st.subheader("Exports")
     st.caption("Export to CSV for audits; printable investigation summary; audit trail.")
     hazards = st.session_state.hazards
     if not hazards:
@@ -956,7 +988,7 @@ def render_exports():
 # Admin (stations, areas, categories, risk matrix, users/roles)
 # ---------------------------------------------------------------------------
 def render_admin():
-    st.header("⚙️ Admin configuration")
+    st.subheader("Admin configuration")
     st.caption("Manage stations, departments, risk matrix, taxonomy, roles. Prototype: mock config.")
     tab_a, tab_b, tab_c = st.tabs(["Stations & departments", "Risk matrix", "Taxonomy & roles"])
     with tab_a:
@@ -988,7 +1020,7 @@ def render_admin():
 # Reference (full taxonomy, links, requirements, document metadata)
 # ---------------------------------------------------------------------------
 def render_reference():
-    st.header("📚 HIRS overview & reference")
+    st.subheader("HIRS overview & reference")
     st.caption("Requirements document summary and reference reading.")
     st.markdown(
         '<p class="hirs-doc-meta">'
@@ -1042,81 +1074,125 @@ def render_reference():
 def main():
     _inject_css()
 
+    # Sync role from widget value (if already selected)
+    if "role_sel" in st.session_state:
+        st.session_state.current_role = st.session_state.role_sel
+
     hazards = st.session_state.hazards
     open_statuses = ["Submitted", "Triage", "Assigned actions", "In progress", "Awaiting verification"]
     open_count = sum(1 for h in hazards if h.get("status") in open_statuses)
 
-    # ----- Website-style header (main content area) -----
+    # ----- Top header: dark purple band with logo + role/region/plus -----
     st.markdown(
-        '<div class="hirs-header-wrap" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.75rem;">'
-        '<div><span class="hirs-header-logo">⚠️ HIRS</span><br>'
-        '<span class="hirs-header-tagline">Hazard Identification & Reporting System · Airport ground handling & ramp operations</span></div>'
-        f'<div style="text-align:right;"><span class="hirs-header-tagline">Total reports: <strong>{len(hazards)}</strong> · Open: <strong>{open_count}</strong></span><br>'
-        f'<span class="hirs-header-tagline">Role: {st.session_state.current_role}</span></div>'
+        '<div class="hirs-top-header">'
+        '<div class="hirs-top-header-left">'
+        '<span class="hirs-top-header-logo">☰</span>'
+        '<span class="hirs-top-header-logo">⚠️ HIRS</span>'
+        '<span class="hirs-top-header-tagline">Hazard Identification & Reporting System</span>'
+        '</div>'
+        '<div class="hirs-top-header-right">'
+        f'<span class="hirs-top-header-tagline">{st.session_state.current_role} ▾</span>'
+        '<span class="hirs-top-header-divider"></span>'
+        '<span class="hirs-top-header-tagline">Station / Region ▾</span>'
+        '<span class="hirs-top-header-divider"></span>'
+        '<span class="hirs-top-header-tagline" style="font-size:1.1rem; cursor:pointer;" title="New report">➕</span>'
+        '</div>'
         '</div>',
         unsafe_allow_html=True,
     )
-    # Nav bar (website-style links – same as sidebar)
-    st.markdown("**Navigate:**")
-    nav_cols = st.columns(len(PAGES))
-    for i, p in enumerate(PAGES):
-        with nav_cols[i]:
-            if st.button(p, key=f"hdr_nav_{p}", type="primary" if p == st.session_state.current_page else "secondary"):
-                st.session_state.current_page = p
+
+    # ----- Sidebar navigation (Mesosphere-style: icons + labels) -----
+    with st.sidebar:
+        st.markdown("**Navigation**")
+        try:
+            nav_idx = PAGES.index(st.session_state.current_page)
+        except ValueError:
+            nav_idx = 0
+        page_display = st.radio(
+            "Select page",
+            PAGES_DISPLAY,
+            index=nav_idx,
+            key="sidebar_nav",
+            label_visibility="collapsed",
+        )
+        st.session_state.current_page = PAGES[PAGES_DISPLAY.index(page_display)]
+
+    # Page title row: large purple title + primary action
+    col_title, col_action = st.columns([3, 1])
+    with col_title:
+        st.markdown(
+            f'<h1 class="hirs-page-title">{st.session_state.current_page}</h1>',
+            unsafe_allow_html=True,
+        )
+    with col_action:
+        if st.session_state.current_page == "Report":
+            st.button(
+                "➕ New report",
+                type="primary",
+                key="header_primary",
+                disabled=True,
+                help="You are on the report form",
+            )
+        elif st.session_state.current_page == "Hazards":
+            if st.button("➕ New hazard", type="primary", key="header_primary"):
+                st.session_state.current_page = "Report"
                 st.rerun()
+        elif st.session_state.current_page == "CAPA":
+            st.button(
+                "➕ Add action",
+                type="primary",
+                key="header_primary",
+                help="Add CAPA from a hazard’s detail",
+            )
+        elif st.session_state.current_page == "Admin":
+            st.button(
+                "➕ Add",
+                type="primary",
+                key="header_primary",
+                help="Manage stations, departments, roles",
+            )
+        else:
+            st.button("➕ New", type="primary", key="header_primary", disabled=True)
+
+    # Top controls row: role selector, sample data, headline metrics
+    ctrl_role, ctrl_sample, ctrl_total, ctrl_open = st.columns([2, 1, 1, 1])
+    with ctrl_role:
+        st.session_state.current_role = st.selectbox(
+            "View as role",
+            ROLES,
+            key="role_sel",
+        )
+    with ctrl_sample:
+        if st.button(
+            "📥 Load sample data",
+            help="Add 2 sample reports for demo (won't duplicate if already loaded)",
+            key="btn_sample",
+        ):
+            _load_sample_data()
+            st.success("Sample data loaded.")
+            st.rerun()
+    with ctrl_total:
+        st.metric("Total reports", len(hazards))
+    with ctrl_open:
+        st.metric("Open", open_count)
+
     st.markdown("---")
 
-    # ----- Sidebar: branding + navigation (all pages) + stats + role -----
-    st.sidebar.markdown("### ⚠️ HIRS")
-    st.sidebar.caption("Hazard Identification & Reporting System")
-    st.sidebar.caption("*Airport ground handling & ramp operations*")
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🧭 Navigation")
-    st.sidebar.markdown("**Go to page:**")
-    try:
-        nav_idx = PAGES.index(st.session_state.current_page)
-    except ValueError:
-        nav_idx = 0
-    page = st.sidebar.radio(
-        "Select page",
-        PAGES,
-        index=nav_idx,
-        key="sidebar_nav",
-        label_visibility="collapsed",
-    )
-    st.session_state.current_page = page
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("**Summary**")
-    st.sidebar.metric("Total reports", len(hazards))
-    st.sidebar.metric("Open", open_count)
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("**View as role**")
-    st.session_state.current_role = st.sidebar.selectbox("Role", ROLES, key="role_sel", label_visibility="collapsed")
-    with st.sidebar.expander("Role permissions"):
-        st.caption(ROLE_PERMISSIONS.get(st.session_state.current_role, ""))
-    if st.sidebar.button("📥 Load sample data", help="Add 2 sample reports for demo (won't duplicate if already loaded)"):
-        _load_sample_data()
-        st.sidebar.success("Sample data loaded.")
-        st.rerun()
-    st.sidebar.markdown("---")
-    st.sidebar.caption("HIRS Prototype v1.0 · No backend")
-    st.sidebar.caption("Prepared for YESAYA YESAYA · 25 Feb 2026")
-
-    if page == "Report":
+    if st.session_state.current_page == "Report":
         render_report()
-    elif page == "Hazards":
+    elif st.session_state.current_page == "Hazards":
         render_hazards()
-    elif page == "Risk & Triage":
+    elif st.session_state.current_page == "Risk & Triage":
         render_risk_triage()
-    elif page == "CAPA":
+    elif st.session_state.current_page == "CAPA":
         render_capa()
-    elif page == "Investigation":
+    elif st.session_state.current_page == "Investigation":
         render_investigation()
-    elif page == "Dashboard":
+    elif st.session_state.current_page == "Dashboard":
         render_dashboard()
-    elif page == "Exports":
+    elif st.session_state.current_page == "Exports":
         render_exports()
-    elif page == "Admin":
+    elif st.session_state.current_page == "Admin":
         render_admin()
     else:
         render_reference()

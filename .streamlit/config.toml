@@ -1,9 +1,9 @@
-# HIRS – Professional prototype theme
+# HIRS – DC/OS-style theme (purple accent, light main)
 [theme]
-primaryColor = "#0d47a1"
-backgroundColor = "#f5f7fa"
-secondaryBackgroundColor = "#ffffff"
-textColor = "#1a237e"
+primaryColor = "#5e4a7a"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f5f7fa"
+textColor = "#1a1a1a"
 font = "sans serif"
 
 [server]
